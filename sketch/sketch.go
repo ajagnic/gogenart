@@ -3,6 +3,7 @@ package sketch
 import (
 	"image"
 	"image/color"
+	"math"
 	"math/rand"
 	"time"
 
@@ -11,8 +12,9 @@ import (
 
 // Params represents the configuration of a sketch.
 type Params struct {
-	Iterations   int
-	PolygonEdges int
+	Iterations          int
+	PolygonEdges        int
+	MaxPolygonSizeRatio float64
 }
 
 // Sketch draws onto a destination image from a source image.
@@ -22,6 +24,7 @@ type Sketch struct {
 	src    image.Image
 	width  float64
 	height float64
+	stroke float64
 }
 
 func init() {
@@ -44,6 +47,7 @@ func NewSketch(source image.Image, config Params) *Sketch {
 		src:    source,
 		width:  w,
 		height: h,
+		stroke: config.MaxPolygonSizeRatio * w,
 	}
 	return s
 }
@@ -55,10 +59,11 @@ func (s *Sketch) Draw() {
 		ry := rand.Float64() * s.height
 		r, g, b := colorToRGB(s.src.At(int(rx), int(ry)))
 
-		strokeRatio := 0.01 * s.width
+		l := computeLuminance(r, g, b)
+		stroke := s.stroke * l
 
-		s.dc.SetRGBA255(r, g, b, rand.Intn(255))
-		s.dc.DrawRegularPolygon(s.PolygonEdges, rx, ry, strokeRatio, 0)
+		s.dc.SetRGBA255(r, g, b, rand.Intn(256))
+		s.dc.DrawRegularPolygon(s.PolygonEdges, rx, ry, stroke, rand.Float64())
 		s.dc.FillPreserve()
 		s.dc.Stroke()
 	}
@@ -72,4 +77,18 @@ func colorToRGB(c color.Color) (r, g, b int) {
 	rr, gg, bb, _ := c.RGBA()
 	r, g, b = int(rr/255), int(gg/255), int(bb/255)
 	return
+}
+
+func computeLuminance(r, g, b int) float64 {
+	values := [3]float64{float64(r), float64(g), float64(b)}
+	for i, c := range values {
+		c = c / 255
+		if c <= 0.03928 {
+			c = c / 12.92
+		} else {
+			c = math.Pow((c+0.055)/1.055, 2.4)
+		}
+		values[i] = c
+	}
+	return 0.2126*values[0] + 0.7152*values[1] + 0.0722*values[2]
 }
