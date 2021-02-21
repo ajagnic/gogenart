@@ -12,10 +12,10 @@ import (
 
 // Params represents the configuration of a sketch.
 type Params struct {
-	Iterations   int
-	MinSides     int
-	MaxSides     int
-	MaxSizeRatio float64
+	Iterations       int
+	PolygonSidesMin  int
+	PolygonSidesMax  int
+	PolygonSizeRatio float64
 }
 
 // Sketch draws onto a destination image from a source image.
@@ -46,7 +46,7 @@ func NewSketch(source image.Image, config Params) *Sketch {
 		src:    source,
 		width:  w,
 		height: h,
-		stroke: config.MaxSizeRatio * w,
+		stroke: config.PolygonSizeRatio * w,
 	}
 	return s
 }
@@ -61,8 +61,8 @@ func (s *Sketch) Draw() {
 		l := computeLuminance(r, g, b)
 		stroke := s.stroke * l
 
-		sides := rand.Intn((s.MaxSides - s.MinSides) + 1)
-		sides += s.MinSides
+		sides := rand.Intn((s.PolygonSidesMax - s.PolygonSidesMin) + 1)
+		sides += s.PolygonSidesMin
 
 		s.dc.SetRGBA255(r, g, b, rand.Intn(256))
 		s.dc.DrawRegularPolygon(sides, rx, ry, stroke, rand.Float64())
@@ -71,8 +71,9 @@ func (s *Sketch) Draw() {
 	}
 }
 
-func (s *Sketch) SaveImage(file string) {
-	s.dc.SavePNG(file)
+// Image returns the destination image.
+func (s *Sketch) Image() image.Image {
+	return s.dc.Image()
 }
 
 func colorToRGB(c color.Color) (r, g, b int) {
