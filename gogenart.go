@@ -25,7 +25,20 @@ func main() {
 	flag.Float64Var(&s, "s", 0.1, "polygon size (percentage of width)")
 	flag.Parse()
 
-	img, enc, err := image.Decode(os.Stdin)
+	var f *os.File
+	var err error
+	switch args := flag.Args(); len(args) {
+	case 1:
+		f, err = os.Open(args[0])
+		if err != nil {
+			log.Fatalf("file error: %v", err)
+		}
+		defer f.Close()
+	default:
+		f = os.Stdin
+	}
+
+	img, enc, err := image.Decode(f)
 	if err != nil {
 		log.Fatalf("could not decode: %v", err)
 	}
