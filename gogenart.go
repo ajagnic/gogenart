@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"image"
 	"image/jpeg"
+	"image/png"
 	"log"
 	"os"
 
@@ -23,9 +25,9 @@ func main() {
 	flag.Float64Var(&s, "s", 0.1, "polygon size (percentage of width)")
 	flag.Parse()
 
-	img, err := jpeg.Decode(os.Stdin)
+	img, enc, err := image.Decode(os.Stdin)
 	if err != nil {
-		log.Fatalf("decoding error: %v", err)
+		log.Fatalf("could not decode: %v", err)
 	}
 
 	canvas := sketch.NewSketch(img, sketch.Params{
@@ -36,5 +38,10 @@ func main() {
 	})
 	canvas.Draw()
 
-	jpeg.Encode(os.Stdout, canvas.Image(), nil)
+	switch enc {
+	case "png":
+		png.Encode(os.Stdout, canvas.Image())
+	default:
+		jpeg.Encode(os.Stdout, canvas.Image(), nil)
+	}
 }
