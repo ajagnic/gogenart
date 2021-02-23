@@ -11,52 +11,42 @@ import (
 	"github.com/ajagnic/go-generative-art/sketch"
 )
 
-var (
-	i   int
-	min int
-	max int
-	s   float64
-)
-
 func main() {
-	flag.IntVar(&i, "i", 10000, "number of iterations")
-	flag.IntVar(&min, "min", 3, "minimum number of polygon sides")
-	flag.IntVar(&max, "max", 5, "maximum number of polygon sides")
-	flag.Float64Var(&s, "s", 0.1, "polygon size (percentage of width)")
+	output := flag.String("o", "stdout", "file to use as output")
+	i := flag.Int("i", 10000, "number of iterations")
+	min := flag.Int("min", 3, "minimum number of polygon sides")
+	max := flag.Int("max", 5, "maximum number of polygon sides")
+	s := flag.Float64("s", 0.1, "polygon size (percentage of width)")
 	flag.Parse()
 
-	var in *os.File
-	var out *os.File
 	var err error
-	if args := flag.Args(); len(args) >= 1 {
+	in := os.Stdin
+	out := os.Stdout
+	if args := flag.Args(); len(args) == 1 {
 		in, err = os.Open(args[0])
 		if err != nil {
-			log.Fatalf("file error: %v", err)
+			log.Fatalln(err)
 		}
 		defer in.Close()
-		if len(args) == 2 {
-			out, err = os.Create(args[1])
-			if err != nil {
-				log.Fatalf("file error: %v", err)
-			}
-			defer out.Close()
-		} else {
-			out = os.Stdout
+	}
+	if f := *output; f != "stdout" {
+		out, err = os.Create(f)
+		if err != nil {
+			log.Fatalln(err)
 		}
-	} else {
-		in = os.Stdin
+		defer out.Close()
 	}
 
 	img, enc, err := image.Decode(in)
 	if err != nil {
-		log.Fatalf("could not decode: %v", err)
+		log.Fatalf("could not decode: %v\n", err)
 	}
 
 	canvas := sketch.NewSketch(img, sketch.Params{
-		Iterations:       i,
-		PolygonSidesMin:  min,
-		PolygonSidesMax:  max,
-		PolygonSizeRatio: s,
+		Iterations:       *i,
+		PolygonSidesMin:  *min,
+		PolygonSidesMax:  *max,
+		PolygonSizeRatio: *s,
 	})
 	canvas.Draw()
 
