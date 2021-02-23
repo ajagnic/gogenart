@@ -25,20 +25,29 @@ func main() {
 	flag.Float64Var(&s, "s", 0.1, "polygon size (percentage of width)")
 	flag.Parse()
 
-	var f *os.File
+	var in *os.File
+	var out *os.File
 	var err error
-	switch args := flag.Args(); len(args) {
-	case 1:
-		f, err = os.Open(args[0])
+	if args := flag.Args(); len(args) >= 1 {
+		in, err = os.Open(args[0])
 		if err != nil {
 			log.Fatalf("file error: %v", err)
 		}
-		defer f.Close()
-	default:
-		f = os.Stdin
+		defer in.Close()
+		if len(args) == 2 {
+			out, err = os.Create(args[1])
+			if err != nil {
+				log.Fatalf("file error: %v", err)
+			}
+			defer out.Close()
+		} else {
+			out = os.Stdout
+		}
+	} else {
+		in = os.Stdin
 	}
 
-	img, enc, err := image.Decode(f)
+	img, enc, err := image.Decode(in)
 	if err != nil {
 		log.Fatalf("could not decode: %v", err)
 	}
@@ -53,8 +62,8 @@ func main() {
 
 	switch enc {
 	case "png":
-		png.Encode(os.Stdout, canvas.Image())
+		png.Encode(out, canvas.Image())
 	default:
-		jpeg.Encode(os.Stdout, canvas.Image(), nil)
+		jpeg.Encode(out, canvas.Image(), nil)
 	}
 }
