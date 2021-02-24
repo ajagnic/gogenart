@@ -12,24 +12,16 @@ import (
 )
 
 func main() {
-	var err error
-
-	output := flag.String("o", "stdout", "file to use as output")
 	i := flag.Int("i", 10000, "number of iterations")
 	min := flag.Uint("min", 3, "minimum number of polygon sides")
 	max := flag.Uint("max", 5, "maximum number of polygon sides")
 	fill := flag.Int("fill", 1, "1 in N chance to fill polygon")
 	s := flag.Float64("s", 0.1, "polygon size (percentage of width)")
+	output := flag.String("o", "stdout", "file to use as output")
 	flag.Parse()
 
-	in := os.Stdin
-	if args := flag.Args(); len(args) > 0 {
-		in, err = os.Open(args[0])
-		if err != nil {
-			log.Fatalln(err)
-		}
-		defer in.Close()
-	}
+	in := handleInput()
+	defer in.Close()
 
 	img, enc, err := image.Decode(in)
 	if err != nil {
@@ -48,18 +40,8 @@ func main() {
 	})
 	canvas.Draw()
 
-	out := os.Stdout
-	if f := *output; f != "stdout" {
-		out, err = os.Create(f)
-		if err != nil {
-			out, err = os.Create("result." + enc)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			log.Printf("file error: %v: saved as result.%s instead", err, enc)
-		}
-		defer out.Close()
-	}
+	out := handleOutput(*output, enc)
+	defer out.Close()
 
 	switch enc {
 	case "png":
@@ -67,4 +49,34 @@ func main() {
 	default:
 		jpeg.Encode(out, canvas.Image(), nil)
 	}
+}
+
+func handleInput() (in *os.File) {
+	var err error
+	if args := flag.Args(); len(args) > 0 {
+		in, err = os.Open(args[0])
+		if err != nil {
+			log.Fatalln(err)
+		}
+	} else {
+		in = os.Stdin
+	}
+	return
+}
+
+func handleOutput(file, enc string) (out *os.File) {
+	var err error
+	if file != "stdout" {
+		out, err = os.Create(file)
+		if err != nil {
+			out, err = os.Create("result." + enc)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			log.Printf("file error: %v: saved as result.%s instead", err, enc)
+		}
+	} else {
+		out = os.Stdout
+	}
+	return
 }
