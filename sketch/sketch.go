@@ -12,10 +12,11 @@ import (
 
 // Params represents the configuration of a sketch.
 type Params struct {
-	Iterations       int
-	PolygonSidesMin  int
-	PolygonSidesMax  int
-	PolygonSizeRatio float64
+	Iterations        int
+	PolygonSidesMin   int
+	PolygonSidesMax   int
+	PolygonFillChance int
+	PolygonSizeRatio  float64
 }
 
 // Sketch draws onto a destination image from a source image.
@@ -40,7 +41,7 @@ func NewSketch(source image.Image, config Params) *Sketch {
 	canvas.DrawRectangle(0, 0, w, h)
 	canvas.FillPreserve()
 
-	s := &Sketch{
+	return &Sketch{
 		Params: config,
 		dc:     canvas,
 		src:    source,
@@ -48,7 +49,6 @@ func NewSketch(source image.Image, config Params) *Sketch {
 		height: h,
 		stroke: config.PolygonSizeRatio * w,
 	}
-	return s
 }
 
 // Draw iterates over the source image, creating the destination image.
@@ -66,7 +66,11 @@ func (s *Sketch) Draw() {
 
 		s.dc.SetRGBA255(r, g, b, rand.Intn(256))
 		s.dc.DrawRegularPolygon(sides, rx, ry, stroke, rand.Float64())
-		s.dc.FillPreserve()
+		if s.PolygonFillChance > 0 {
+			if n := rand.Intn(s.PolygonFillChance); n+1 == 1 {
+				s.dc.FillPreserve()
+			}
+		}
 		s.dc.Stroke()
 	}
 }

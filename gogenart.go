@@ -14,8 +14,9 @@ import (
 func main() {
 	output := flag.String("o", "stdout", "file to use as output")
 	i := flag.Int("i", 10000, "number of iterations")
-	min := flag.Int("min", 3, "minimum number of polygon sides")
-	max := flag.Int("max", 5, "maximum number of polygon sides")
+	min := flag.Uint("min", 3, "minimum number of polygon sides")
+	max := flag.Uint("max", 5, "maximum number of polygon sides")
+	fill := flag.Int("fill", 1, "1 in N chance to fill polygon")
 	s := flag.Float64("s", 0.1, "polygon size (percentage of width)")
 	flag.Parse()
 
@@ -42,11 +43,15 @@ func main() {
 		log.Fatalf("could not decode: %v\n", err)
 	}
 
+	if *max < *min {
+		min, max = max, min
+	}
 	canvas := sketch.NewSketch(img, sketch.Params{
-		Iterations:       *i,
-		PolygonSidesMin:  *min,
-		PolygonSidesMax:  *max,
-		PolygonSizeRatio: *s,
+		Iterations:        *i,
+		PolygonSidesMin:   int(*min),
+		PolygonSidesMax:   int(*max),
+		PolygonFillChance: *fill,
+		PolygonSizeRatio:  *s,
 	})
 	canvas.Draw()
 
