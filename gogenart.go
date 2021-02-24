@@ -52,11 +52,11 @@ func main() {
 	if f := *output; f != "stdout" {
 		out, err = os.Create(f)
 		if err != nil {
-			log.Printf("file error: %v: saved as result.%s instead", err, enc)
 			out, err = os.Create("result." + enc)
 			if err != nil {
 				log.Fatalln(err)
 			}
+			log.Printf("file error: %v: saved as result.%s instead", err, enc)
 		}
 		defer out.Close()
 	}
