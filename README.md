@@ -1,9 +1,11 @@
 # Generative Art in Go
 My take on the work presented in [Generative Art in Go by Preslav Rachev](https://preslav.me/generative-art-in-golang/).
 
-Examples | ~
----------|---
-![](examples/earth.jpg) | ![](examples/out.jpeg)
+<p align="center" width="100%">
+<img width="30%" src="examples/abstract.jpeg">
+<img width="30%" src="examples/woman.jpeg">
+<img width="30%" src="examples/lines.jpeg">
+</p>
 
 ## Libraries
 - [fogleman/gg](https://github.com/fogleman/gg)
@@ -14,6 +16,8 @@ $ gogenart -h
 Usage of ./gogenart:
   -fill int
         1 in N chance to fill polygon (default 1)
+  -h uint
+        desired height of image (default 1200)
   -i int
         number of iterations (default 10000)
   -max uint
@@ -24,6 +28,8 @@ Usage of ./gogenart:
         file to use as output (default "stdout")
   -s float
         polygon size (percentage of width) (default 0.1)
+  -w uint
+        desired width of image (default 1600)
 ```
 
 The command can receive input and output in various ways.
