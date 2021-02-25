@@ -12,6 +12,8 @@ import (
 
 // Params represents the configuration of a sketch.
 type Params struct {
+	Width             int
+	Height            int
 	Iterations        int
 	PolygonSidesMin   int
 	PolygonSidesMax   int
@@ -34,20 +36,20 @@ func NewSketch(source image.Image, config Params) *Sketch {
 	rand.Seed(time.Now().Unix())
 
 	max := source.Bounds().Max
-	w, h := float64(max.X), float64(max.Y)
+	w, h := config.Width, config.Height
 
-	canvas := gg.NewContext(max.X, max.Y)
+	canvas := gg.NewContext(w, h)
 	canvas.SetColor(color.Black)
-	canvas.DrawRectangle(0, 0, w, h)
+	canvas.DrawRectangle(0, 0, float64(w), float64(h))
 	canvas.FillPreserve()
 
 	return &Sketch{
 		Params: config,
 		dc:     canvas,
 		src:    source,
-		width:  w,
-		height: h,
-		stroke: config.PolygonSizeRatio * w,
+		width:  float64(max.X),
+		height: float64(max.Y),
+		stroke: config.PolygonSizeRatio * float64(w),
 	}
 }
 
@@ -64,8 +66,11 @@ func (s *Sketch) Draw() {
 		sides := rand.Intn((s.PolygonSidesMax - s.PolygonSidesMin) + 1)
 		sides += s.PolygonSidesMin
 
+		x := rx * float64(s.Width) / s.width
+		y := ry * float64(s.Height) / s.height
+
 		s.dc.SetRGBA255(r, g, b, rand.Intn(256))
-		s.dc.DrawRegularPolygon(sides, rx, ry, stroke, rand.Float64())
+		s.dc.DrawRegularPolygon(sides, x, y, stroke, rand.Float64())
 		if s.PolygonFillChance > 0 {
 			if n := rand.Intn(s.PolygonFillChance); n+1 == 1 {
 				s.dc.FillPreserve()
