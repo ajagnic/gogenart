@@ -12,9 +12,9 @@ import (
 
 // Params represents the configuration of a sketch.
 type Params struct {
+	Iterations        int
 	Width             int
 	Height            int
-	Iterations        int
 	PolygonSidesMin   int
 	PolygonSidesMax   int
 	PolygonFillChance int
