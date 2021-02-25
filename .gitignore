@@ -3,3 +3,5 @@
 *.png
 main
 gogenart
+
+!examples/*

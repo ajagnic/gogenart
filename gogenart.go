@@ -69,11 +69,9 @@ func handleOutput(file, enc string) (out *os.File) {
 	if file != "stdout" {
 		out, err = os.Create(file)
 		if err != nil {
-			out, err = os.Create("result." + enc)
 			if err != nil {
 				log.Fatalln(err)
 			}
-			log.Printf("file error: %v: saved as result.%s instead", err, enc)
 		}
 	} else {
 		out = os.Stdout
