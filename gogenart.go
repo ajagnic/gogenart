@@ -12,9 +12,9 @@ import (
 )
 
 func main() {
-	w := flag.Uint("w", 1600, "desired width of image")
-	h := flag.Uint("h", 1200, "desired height of image")
 	i := flag.Int("i", 10000, "number of iterations")
+	w := flag.Uint("width", 1600, "desired width of image")
+	h := flag.Uint("height", 1200, "desired height of image")
 	min := flag.Uint("min", 3, "minimum number of polygon sides")
 	max := flag.Uint("max", 5, "maximum number of polygon sides")
 	fill := flag.Int("fill", 1, "1 in N chance to fill polygon")
@@ -34,9 +34,9 @@ func main() {
 		min, max = max, min
 	}
 	canvas := sketch.NewSketch(img, sketch.Params{
+		Iterations:        *i,
 		Width:             int(*w),
 		Height:            int(*h),
-		Iterations:        *i,
 		PolygonSidesMin:   int(*min),
 		PolygonSidesMax:   int(*max),
 		PolygonFillChance: *fill,

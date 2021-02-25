@@ -16,7 +16,7 @@ $ gogenart -h
 Usage of ./gogenart:
   -fill int
         1 in N chance to fill polygon (default 1)
-  -h uint
+  -height uint
         desired height of image (default 1200)
   -i int
         number of iterations (default 10000)
@@ -28,7 +28,7 @@ Usage of ./gogenart:
         file to use as output (default "stdout")
   -s float
         polygon size (percentage of width) (default 0.1)
-  -w uint
+  -width uint
         desired width of image (default 1600)
 ```
 
