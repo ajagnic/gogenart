@@ -15,6 +15,7 @@ type Params struct {
 	Iterations        int
 	Width             int
 	Height            int
+	PixelShake        int
 	PolygonSidesMin   int
 	PolygonSidesMax   int
 	PolygonFillChance int
@@ -68,6 +69,7 @@ func (s *Sketch) Draw() {
 
 		x := rx * float64(s.Width) / s.width
 		y := ry * float64(s.Height) / s.height
+		x, y = shake(x, y, s.PixelShake)
 
 		s.dc.SetRGBA255(r, g, b, rand.Intn(256))
 		s.dc.DrawRegularPolygon(sides, x, y, stroke, rand.Float64())
@@ -83,6 +85,14 @@ func (s *Sketch) Draw() {
 // Image returns the destination image.
 func (s *Sketch) Image() image.Image {
 	return s.dc.Image()
+}
+
+func shake(x, y float64, max int) (float64, float64) {
+	if max > 0 {
+		x += float64(rand.Intn(2*max) - max)
+		y += float64(rand.Intn(2*max) - max)
+	}
+	return x, y
 }
 
 func colorToRGB(c color.Color) (r, g, b int) {
