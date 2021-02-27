@@ -88,7 +88,7 @@ func (s *Sketch) Image() image.Image {
 }
 
 func shake(x, y float64, max int) (float64, float64) {
-	if max != 0 {
+	if max > 0 {
 		x += float64(rand.Intn(2*max) - max)
 		y += float64(rand.Intn(2*max) - max)
 	}
