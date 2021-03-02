@@ -12,14 +12,15 @@ import (
 
 // Params represents the configuration of a sketch.
 type Params struct {
-	Iterations        int
-	Width             int
-	Height            int
-	PixelShake        int
-	PolygonSidesMin   int
-	PolygonSidesMax   int
-	PolygonFillChance int
-	PolygonSizeRatio  float64
+	Iterations         int
+	Width              int
+	Height             int
+	PixelShake         int
+	PolygonSidesMin    int
+	PolygonSidesMax    int
+	PolygonFillChance  int
+	PolygonColorChance int
+	PolygonSizeRatio   float64
 }
 
 // Sketch draws onto a destination image from a source image.
@@ -68,8 +69,18 @@ func (s *Sketch) Draw() {
 		sides += s.PolygonSidesMin
 
 		x := rx * float64(s.Width) / s.width
-		y := ry * float64(s.Height) / s.height
-		x, y = shake(x, y, s.PixelShake)
+		y := ry * float64(s.Width) / s.width
+		max := s.PixelShake
+		if max > 0 {
+			x += float64(rand.Intn(2*max) - max)
+			y += float64(rand.Intn(2*max) - max)
+		}
+
+		if s.PolygonColorChance > 0 && l > 0.1 {
+			if z := rand.Intn(s.PolygonColorChance); z+1 == 1 {
+				r, g, b = rand.Intn(256), rand.Intn(256), rand.Intn(256)
+			}
+		}
 
 		s.dc.SetRGBA255(r, g, b, rand.Intn(256))
 		s.dc.DrawRegularPolygon(sides, x, y, stroke, rand.Float64())
@@ -85,14 +96,6 @@ func (s *Sketch) Draw() {
 // Image returns the destination image.
 func (s *Sketch) Image() image.Image {
 	return s.dc.Image()
-}
-
-func shake(x, y float64, max int) (float64, float64) {
-	if max > 0 {
-		x += float64(rand.Intn(2*max) - max)
-		y += float64(rand.Intn(2*max) - max)
-	}
-	return x, y
 }
 
 func colorToRGB(c color.Color) (r, g, b int) {

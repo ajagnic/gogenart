@@ -13,14 +13,15 @@ import (
 
 func main() {
 	i := flag.Int("i", 10000, "number of iterations")
-	w := flag.Uint("width", 1600, "desired width of image")
-	h := flag.Uint("height", 1200, "desired height of image")
-	shake := flag.Float64("shake", 0.0, "amount to 'shake' pixel positions")
+	w := flag.Uint("width", 2400, "desired width of image")
+	h := flag.Uint("height", 1600, "desired height of image")
+	shake := flag.Float64("shake", 0.0, "amount to randomize pixel positions")
 	min := flag.Uint("min", 3, "minimum number of polygon sides")
 	max := flag.Uint("max", 5, "maximum number of polygon sides")
 	fill := flag.Int("fill", 1, "1 in N chance to fill polygon")
+	color := flag.Int("color", 0, "1 in N chance to randomize polygon color")
 	s := flag.Float64("s", 0.1, "polygon size (percentage of width)")
-	output := flag.String("o", "stdout", "file to use as output")
+	output := flag.String("o", "", "file to use as output")
 	flag.Parse()
 
 	in := handleInput()
@@ -35,14 +36,15 @@ func main() {
 		min, max = max, min
 	}
 	canvas := sketch.NewSketch(img, sketch.Params{
-		Iterations:        *i,
-		Width:             int(*w),
-		Height:            int(*h),
-		PixelShake:        int(*shake * float64(*w)),
-		PolygonSidesMin:   int(*min),
-		PolygonSidesMax:   int(*max),
-		PolygonFillChance: *fill,
-		PolygonSizeRatio:  *s,
+		Iterations:         *i,
+		Width:              int(*w),
+		Height:             int(*h),
+		PixelShake:         int(*shake * float64(*w)),
+		PolygonSidesMin:    int(*min),
+		PolygonSidesMax:    int(*max),
+		PolygonFillChance:  *fill,
+		PolygonColorChance: *color,
+		PolygonSizeRatio:   *s,
 	})
 	canvas.Draw()
 
@@ -72,12 +74,10 @@ func handleInput() (in *os.File) {
 
 func handleOutput(file, enc string) (out *os.File) {
 	var err error
-	if file != "stdout" {
+	if file != "" {
 		out, err = os.Create(file)
 		if err != nil {
-			if err != nil {
-				log.Fatalln(err)
-			}
+			log.Fatalln(err)
 		}
 	} else {
 		out = os.Stdout
