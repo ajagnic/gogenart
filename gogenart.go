@@ -7,6 +7,7 @@ import (
 	"image/png"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/ajagnic/go-generative-art/sketch"
 )
@@ -48,7 +49,7 @@ func main() {
 	})
 	canvas.Draw()
 
-	out := handleOutput(*output, enc)
+	out, enc := handleOutput(*output, enc)
 	defer out.Close()
 
 	switch enc {
@@ -72,15 +73,15 @@ func handleInput() (in *os.File) {
 	return
 }
 
-func handleOutput(file, enc string) (out *os.File) {
-	var err error
+func handleOutput(file, enc string) (*os.File, string) {
 	if file != "" {
-		out, err = os.Create(file)
+		out, err := os.Create(file)
 		if err != nil {
 			log.Fatalln(err)
 		}
+		fSlc := strings.Split(file, ".")
+		return out, fSlc[len(fSlc)-1]
 	} else {
-		out = os.Stdout
+		return os.Stdout, enc
 	}
-	return
 }
