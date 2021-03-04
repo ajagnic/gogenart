@@ -18,7 +18,7 @@ Usage of ./gogenart:
   -fill int
         1 in N chance to fill polygon (default 1)
   -height uint
-        desired height of image (default 1600)
+        desired height of image
   -i int
         number of iterations (default 10000)
   -max uint
@@ -32,7 +32,7 @@ Usage of ./gogenart:
   -shake float
         amount to randomize pixel positions
   -width uint
-        desired width of image (default 2400)
+        desired width of image
 ```
 
 The command can receive input and output in various ways.
@@ -48,6 +48,9 @@ $ gogenart -o=result.jpeg example.jpeg
 ```bash
 # Both JPEG and PNG files can be used.
 $ gogenart example.png > result.png
+
+# Extensions can be converted if using the -o flag.
+$ gogenart -o=result.png example.jpeg
 ```
 
 ## The Drawing Algorithm
@@ -58,7 +61,7 @@ $ gogenart example.png > result.png
 rx := rand.Float64() * s.width
 ry := rand.Float64() * s.height
 ...
-l := computeLuminance(r, g, b)
+l := luminance(r, g, b)
 stroke := s.stroke * l
 ...
 s.dc.SetRGBA255(r, g, b, rand.Intn(256))
