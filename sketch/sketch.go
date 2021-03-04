@@ -21,6 +21,7 @@ type Params struct {
 	PolygonFillChance  int
 	PolygonColorChance int
 	PolygonSizeRatio   float64
+	Greyscale          bool
 }
 
 // Sketch draws onto a destination image from a source image.
@@ -81,7 +82,10 @@ func (s *Sketch) Draw() {
 			y += float64(rand.Intn(2*max) - max)
 		}
 
-		if l > 0.1 && randomChance(s.PolygonColorChance) {
+		if s.Greyscale {
+			grey := int(l * 255)
+			r, g, b = grey, grey, grey
+		} else if l > 0.1 && randomChance(s.PolygonColorChance) {
 			r, g, b = rand.Intn(256), rand.Intn(256), rand.Intn(256)
 		}
 		s.dc.SetRGBA255(r, g, b, rand.Intn(256))
