@@ -22,6 +22,7 @@ func main() {
 	fill := flag.Int("fill", 1, "1 in N chance to fill polygon")
 	color := flag.Int("color", 0, "1 in N chance to randomize polygon color")
 	s := flag.Float64("s", 0.1, "polygon size (percentage of width)")
+	grey := flag.Bool("grey", false, "convert to greyscale")
 	output := flag.String("o", "", "file to use as output")
 	flag.Parse()
 
@@ -46,6 +47,7 @@ func main() {
 		PolygonFillChance:  *fill,
 		PolygonColorChance: *color,
 		PolygonSizeRatio:   *s,
+		Greyscale:          *grey,
 	})
 	canvas.Draw()
 
