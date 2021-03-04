@@ -14,8 +14,8 @@ import (
 
 func main() {
 	i := flag.Int("i", 10000, "number of iterations")
-	w := flag.Uint("width", 2400, "desired width of image")
-	h := flag.Uint("height", 1600, "desired height of image")
+	w := flag.Uint("width", 0, "desired width of image")
+	h := flag.Uint("height", 0, "desired height of image")
 	shake := flag.Float64("shake", 0.0, "amount to randomize pixel positions")
 	min := flag.Uint("min", 3, "minimum number of polygon sides")
 	max := flag.Uint("max", 5, "maximum number of polygon sides")
@@ -81,7 +81,6 @@ func handleOutput(file, enc string) (*os.File, string) {
 		}
 		fSlc := strings.Split(file, ".")
 		return out, fSlc[len(fSlc)-1]
-	} else {
-		return os.Stdout, enc
 	}
+	return os.Stdout, enc
 }
