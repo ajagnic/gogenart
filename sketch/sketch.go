@@ -38,6 +38,12 @@ func NewSketch(source image.Image, config Params) *Sketch {
 	rand.Seed(time.Now().Unix())
 
 	max := source.Bounds().Max
+	if config.Width == 0 {
+		config.Width = max.X
+	}
+	if config.Height == 0 {
+		config.Height = max.Y
+	}
 	w, h := config.Width, config.Height
 
 	canvas := gg.NewContext(w, h)
@@ -62,32 +68,26 @@ func (s *Sketch) Draw() {
 		ry := rand.Float64() * s.height
 		r, g, b := colorToRGB(s.src.At(int(rx), int(ry)))
 
-		l := computeLuminance(r, g, b)
+		l := luminance(r, g, b)
 		stroke := s.stroke * l
 
 		sides := rand.Intn((s.PolygonSidesMax - s.PolygonSidesMin) + 1)
 		sides += s.PolygonSidesMin
 
 		x := rx * float64(s.Width) / s.width
-		y := ry * float64(s.Width) / s.width
-		max := s.PixelShake
-		if max > 0 {
+		y := ry * float64(s.Height) / s.height
+		if max := s.PixelShake; max > 0 {
 			x += float64(rand.Intn(2*max) - max)
 			y += float64(rand.Intn(2*max) - max)
 		}
 
-		if s.PolygonColorChance > 0 && l > 0.1 {
-			if z := rand.Intn(s.PolygonColorChance); z+1 == 1 {
-				r, g, b = rand.Intn(256), rand.Intn(256), rand.Intn(256)
-			}
+		if l > 0.1 && randomChance(s.PolygonColorChance) {
+			r, g, b = rand.Intn(256), rand.Intn(256), rand.Intn(256)
 		}
-
 		s.dc.SetRGBA255(r, g, b, rand.Intn(256))
 		s.dc.DrawRegularPolygon(sides, x, y, stroke, rand.Float64())
-		if s.PolygonFillChance > 0 {
-			if n := rand.Intn(s.PolygonFillChance); n+1 == 1 {
-				s.dc.FillPreserve()
-			}
+		if randomChance(s.PolygonFillChance) {
+			s.dc.FillPreserve()
 		}
 		s.dc.Stroke()
 	}
@@ -98,13 +98,22 @@ func (s *Sketch) Image() image.Image {
 	return s.dc.Image()
 }
 
+func randomChance(odds int) bool {
+	if odds > 0 {
+		if n := rand.Intn(odds); n+1 == 1 {
+			return true
+		}
+	}
+	return false
+}
+
 func colorToRGB(c color.Color) (r, g, b int) {
 	rr, gg, bb, _ := c.RGBA()
 	r, g, b = int(rr/255), int(gg/255), int(bb/255)
 	return
 }
 
-func computeLuminance(r, g, b int) float64 {
+func luminance(r, g, b int) float64 {
 	values := [3]float64{float64(r), float64(g), float64(b)}
 	for i, c := range values {
 		c = c / 255
