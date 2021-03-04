@@ -17,6 +17,8 @@ Usage of ./gogenart:
         1 in N chance to randomize polygon color
   -fill int
         1 in N chance to fill polygon (default 1)
+  -grey
+        convert to greyscale
   -height uint
         desired height of image
   -i int
