@@ -16,12 +16,12 @@ func main() {
 	i := flag.Int("i", 10000, "number of iterations")
 	w := flag.Uint("width", 0, "desired width of image")
 	h := flag.Uint("height", 0, "desired height of image")
-	shake := flag.Float64("shake", 0.0, "amount to randomize pixel positions")
 	min := flag.Uint("min", 3, "minimum number of polygon sides")
 	max := flag.Uint("max", 5, "maximum number of polygon sides")
-	fill := flag.Int("fill", 1, "1 in N chance to fill polygon")
-	color := flag.Int("color", 0, "1 in N chance to randomize polygon color")
+	fill := flag.Uint("fill", 100, "percent chance to fill polygon")
+	color := flag.Uint("color", 0, "percent chance to randomize polygon color")
 	s := flag.Float64("s", 0.1, "polygon size (percentage of width)")
+	shake := flag.Float64("shake", 0.0, "amount to randomize pixel positions")
 	grey := flag.Bool("grey", false, "convert to greyscale")
 	output := flag.String("o", "", "file to use as output")
 	flag.Parse()
@@ -41,12 +41,12 @@ func main() {
 		Iterations:         *i,
 		Width:              int(*w),
 		Height:             int(*h),
-		PixelShake:         int(*shake * float64(*w)),
 		PolygonSidesMin:    int(*min),
 		PolygonSidesMax:    int(*max),
-		PolygonFillChance:  *fill,
-		PolygonColorChance: *color,
+		PolygonFillChance:  float64(*fill) / 100.0,
+		PolygonColorChance: float64(*color) / 100.0,
 		PolygonSizeRatio:   *s,
+		PixelShake:         *shake,
 		Greyscale:          *grey,
 	})
 	canvas.Draw()

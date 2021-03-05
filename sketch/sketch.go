@@ -15,12 +15,12 @@ type Params struct {
 	Iterations         int
 	Width              int
 	Height             int
-	PixelShake         int
 	PolygonSidesMin    int
 	PolygonSidesMax    int
-	PolygonFillChance  int
-	PolygonColorChance int
+	PolygonFillChance  float64
+	PolygonColorChance float64
 	PolygonSizeRatio   float64
+	PixelShake         float64
 	Greyscale          bool
 }
 
@@ -32,6 +32,7 @@ type Sketch struct {
 	width  float64
 	height float64
 	stroke float64
+	shake  int
 }
 
 // NewSketch returns a blank Sketch based on the source image.
@@ -59,6 +60,7 @@ func NewSketch(source image.Image, config Params) *Sketch {
 		width:  float64(max.X),
 		height: float64(max.Y),
 		stroke: config.PolygonSizeRatio * float64(w),
+		shake:  int(config.PixelShake * float64(w)),
 	}
 }
 
@@ -77,7 +79,7 @@ func (s *Sketch) Draw() {
 
 		x := rx * float64(s.Width) / s.width
 		y := ry * float64(s.Height) / s.height
-		if max := s.PixelShake; max > 0 {
+		if max := s.shake; max > 0 {
 			x += float64(rand.Intn(2*max) - max)
 			y += float64(rand.Intn(2*max) - max)
 		}
@@ -102,11 +104,9 @@ func (s *Sketch) Image() image.Image {
 	return s.dc.Image()
 }
 
-func randomChance(odds int) bool {
-	if odds > 0 {
-		if n := rand.Intn(odds); n+1 == 1 {
-			return true
-		}
+func randomChance(odds float64) bool {
+	if r := rand.Intn(100) + 1; r < int(odds*100) {
+		return true
 	}
 	return false
 }
