@@ -1,11 +1,15 @@
 # Generative Art in Go
-My take on the work presented in [Generative Art in Go by Preslav Rachev](https://preslav.me/generative-art-in-golang/).
 
 <p align="center" width="100%">
 <img width="31%" src="examples/abstract.jpeg">
 <img width="31%" src="examples/woman.jpeg">
 <img width="31%" src="examples/lines.jpeg">
 </p>
+
+My take on the work presented in [preslavrachev/generative-art-in-go](https://github.com/preslavrachev/generative-art-in-go).
+This project differs from Preslav's by a couple of things:
+- *gogenart* is firstly structured as a command line tool, although the sketch package can be imported
+- The drawing algorithm implements pixel luminance as a scaling factor. This essentially uses the origin image as a 'heatmap' of sorts, in which larger polygons will be drawn where pixels are brighter
 
 ## Libraries
 - [fogleman/gg](https://github.com/fogleman/gg)
@@ -74,7 +78,7 @@ s.dc.DrawRegularPolygon(sides, x, y, stroke, rand.Float64())
 ## Examples
 Depending on the parameters used and their values, one can achieve a wide range of effects.
 
-Here we keep most of the resolution of the original image, due to the high iteration and low polygon size.
+Here we keep most of the resolution of the original image, due to the high iteration and small polygon size.
 
 <p align="center" width="100%">
 <img width="32%" src="examples/crane-original.jpg">
@@ -85,19 +89,6 @@ Here we keep most of the resolution of the original image, due to the high itera
 $ ./gogenart -i=250000 -s=0.03 -fill=10 -shake=0.01 -grey \
 -o=examples/crane.jpeg \
 examples/crane-original.jpg
-```
-
-For this example we don't do much, except introduce some randomness in the fill and color.
-
-<p align="center" width="100%">
-<img width="32%" src="examples/humming-original.jpg">
-<img width="32%" src="examples/humming.jpeg">
-</p>
-
-```bash
-$ ./gogenart -s=0.07 -fill=50 -color=10 \
--o=examples/humming.jpeg \
-examples/humming-original.jpg
 ```
 
 With low iteration and large polygons, a lot of shake, and completely random color, we can create an entirely original image. 
