@@ -1,5 +1,4 @@
 # Generative Art in Go
-My take on the work presented in [Generative Art in Go by Preslav Rachev](https://preslav.me/generative-art-in-golang/).
 
 <p align="center" width="100%">
 <img width="31%" src="examples/abstract.jpeg">
@@ -7,16 +6,21 @@ My take on the work presented in [Generative Art in Go by Preslav Rachev](https:
 <img width="31%" src="examples/lines.jpeg">
 </p>
 
+My take on the work presented in [preslavrachev/generative-art-in-go](https://github.com/preslavrachev/generative-art-in-go).
+This project differs from Preslav's by a couple of things:
+- *gogenart* is firstly structured as a command line tool, although the sketch package can be imported
+- The drawing algorithm implements pixel luminance as a scaling factor. This essentially uses the origin image as a 'heatmap' of sorts, in which larger polygons will be drawn where pixels are brighter
+
 ## Libraries
 - [fogleman/gg](https://github.com/fogleman/gg)
 
 ## Usage
 ```
 Usage of ./gogenart:
-  -color int
-        1 in N chance to randomize polygon color
-  -fill int
-        1 in N chance to fill polygon (default 1)
+  -color uint
+        percent chance to randomize polygon color
+  -fill uint
+        percent chance to fill polygon (default 100)
   -grey
         convert to greyscale
   -height uint
@@ -69,6 +73,35 @@ stroke := s.stroke * l
 s.dc.SetRGBA255(r, g, b, rand.Intn(256))
 s.dc.DrawRegularPolygon(sides, x, y, stroke, rand.Float64())
 ...
+```
+
+## Examples
+Depending on the parameters used and their values, one can achieve a wide range of effects.
+
+Here we keep most of the resolution of the original image, due to the high iteration and small polygon size.
+
+<p align="center" width="100%">
+<img width="32%" src="examples/crane-original.jpg">
+<img width="32%" src="examples/crane.jpeg">
+</p>
+
+```bash
+$ ./gogenart -i=250000 -s=0.03 -fill=10 -shake=0.01 -grey \
+-o=examples/crane.jpeg \
+examples/crane-original.jpg
+```
+
+With low iteration and large polygons, a lot of shake, and completely random color, we can create an entirely original image. 
+
+<p align="center" width="100%">
+<img width="32%" src="examples/rose-original.jpg">
+<img width="32%" src="examples/rose.jpeg">
+</p>
+
+```bash
+$ ./gogenart -i=2000 -s=0.2 -min=2 -max=3 -shake=0.2 -fill=50 -color=100 \
+-o=examples/rose.jpeg \
+examples/rose-original.jpg
 ```
 
 # Authors
