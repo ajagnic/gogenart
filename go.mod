@@ -1,4 +1,4 @@
-module github.com/ajagnic/go-generative-art
+module github.com/ajagnic/gogenart
 
 go 1.15
 
