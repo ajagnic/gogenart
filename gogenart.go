@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ajagnic/go-generative-art/sketch"
+	"github.com/ajagnic/gogenart/sketch"
 )
 
 func main() {
