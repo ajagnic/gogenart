@@ -2,9 +2,6 @@ package main
 
 import (
 	"flag"
-	"image"
-	"image/jpeg"
-	"image/png"
 	"log"
 	"os"
 	"strings"
@@ -26,40 +23,31 @@ func main() {
 	output := flag.String("o", "", "file to use as output")
 	flag.Parse()
 
-	in := handleInput()
-	defer in.Close()
-
-	img, enc, err := image.Decode(in)
-	if err != nil {
-		log.Fatalf("could not decode: %v\n", err)
-	}
-
 	if *max < *min {
 		min, max = max, min
 	}
-	canvas := sketch.NewSketch(img, sketch.Params{
+
+	in := handleInput()
+	defer in.Close()
+
+	img, enc := sketch.Source(in)
+	newImg := sketch.NewSketch(img, sketch.Params{
 		Iterations:         *i,
-		Width:              int(*w),
-		Height:             int(*h),
 		PolygonSidesMin:    int(*min),
 		PolygonSidesMax:    int(*max),
 		PolygonFillChance:  float64(*fill) / 100.0,
 		PolygonColorChance: float64(*color) / 100.0,
 		PolygonSizeRatio:   *s,
 		PixelShake:         *shake,
+		NewWidth:           float64(*w),
+		NewHeight:          float64(*h),
 		Greyscale:          *grey,
-	})
-	canvas.Draw()
+	}).Draw()
 
 	out, enc := handleOutput(*output, enc)
 	defer out.Close()
 
-	switch enc {
-	case "png":
-		png.Encode(out, canvas.Image())
-	default:
-		jpeg.Encode(out, canvas.Image(), nil)
-	}
+	sketch.Encode(out, newImg, enc)
 }
 
 func handleInput() (in *os.File) {
