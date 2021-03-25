@@ -91,7 +91,10 @@ func (s *Sketch) Draw() image.Image {
 
 		stroke := s.stroke
 		if s.InvertScaling {
-			stroke /= (l * 10)
+			stroke = 0
+			if invL := math.Round(l * 100); invL != 0 {
+				stroke = s.stroke / invL
+			}
 		} else {
 			stroke *= l
 		}
