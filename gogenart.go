@@ -20,6 +20,7 @@ func main() {
 	s := flag.Float64("s", 0.1, "polygon size (percentage of width)")
 	shake := flag.Float64("shake", 0.0, "amount to randomize pixel positions")
 	grey := flag.Bool("grey", false, "convert to greyscale")
+	invert := flag.Bool("invert", false, "invert luminance scaling")
 	output := flag.String("o", "", "file to use as output")
 	flag.Parse()
 
@@ -42,6 +43,7 @@ func main() {
 		NewWidth:           float64(*w),
 		NewHeight:          float64(*h),
 		Greyscale:          *grey,
+		InvertScaling:      *invert,
 	}).Draw()
 
 	out, enc := handleOutput(*output, enc)
