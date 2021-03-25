@@ -8,7 +8,7 @@
 
 My take on the work presented in [preslavrachev/generative-art-in-go](https://github.com/preslavrachev/generative-art-in-go).
 This project differs from Preslav's by a couple of things:
-- *gogenart* is firstly structured as a command line tool, although the sketch package can be imported
+- *gogenart* is firstly structured as a command line tool, although the _sketch_ package can be imported
 - The drawing algorithm implements pixel luminance as a scaling factor. This essentially uses the origin image as a 'heatmap' of sorts, in which larger polygons will be drawn where pixels are brighter
 
 ## Libraries
@@ -27,6 +27,8 @@ Usage of ./gogenart:
         desired height of image
   -i int
         number of iterations (default 10000)
+  -invert
+        invert luminance scaling
   -max uint
         maximum number of polygon sides (default 5)
   -min uint
