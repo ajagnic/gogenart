@@ -3,6 +3,9 @@ package sketch
 import (
 	"image"
 	"image/color"
+	"image/jpeg"
+	"image/png"
+	"io"
 	"math"
 	"math/rand"
 	"time"
@@ -13,14 +16,14 @@ import (
 // Params represents the configuration of a sketch.
 type Params struct {
 	Iterations         int
-	Width              int
-	Height             int
 	PolygonSidesMin    int
 	PolygonSidesMax    int
 	PolygonFillChance  float64
 	PolygonColorChance float64
 	PolygonSizeRatio   float64
 	PixelShake         float64
+	NewWidth           float64
+	NewHeight          float64
 	Greyscale          bool
 }
 
@@ -35,38 +38,50 @@ type Sketch struct {
 	shake  int
 }
 
+// Source decodes a JPEG or PNG image from an input source.
+// If input can't be decoded, returns a 100x100 blank image.
+func Source(in io.Reader) (img image.Image, enc string) {
+	img, enc, err := image.Decode(in)
+	if err != nil {
+		img = image.Rect(0, 0, 100, 100)
+	}
+	return
+}
+
 // NewSketch returns a blank Sketch based on the source image.
+// Seeds the math/rand pkg.
 func NewSketch(source image.Image, config Params) *Sketch {
 	rand.Seed(time.Now().Unix())
 
 	max := source.Bounds().Max
-	if config.Width == 0 {
-		config.Width = max.X
+	x, y := float64(max.X), float64(max.Y)
+	if config.NewWidth == 0 {
+		config.NewWidth = x
 	}
-	if config.Height == 0 {
-		config.Height = max.Y
+	if config.NewHeight == 0 {
+		config.NewHeight = y
 	}
-	w, h := config.Width, config.Height
+	w, h := config.NewWidth, config.NewHeight
 
-	canvas := gg.NewContext(w, h)
+	canvas := gg.NewContext(int(w), int(h))
 	canvas.SetColor(color.Black)
-	canvas.DrawRectangle(0, 0, float64(w), float64(h))
+	canvas.DrawRectangle(0, 0, w, h)
 	canvas.FillPreserve()
 
 	return &Sketch{
 		Params: config,
 		dc:     canvas,
 		src:    source,
-		width:  float64(max.X),
-		height: float64(max.Y),
-		stroke: config.PolygonSizeRatio * float64(w),
-		shake:  int(config.PixelShake * float64(w)),
+		width:  x,
+		height: y,
+		stroke: config.PolygonSizeRatio * w,
+		shake:  int(config.PixelShake * w),
 	}
 }
 
 // Draw iterates over the source image, creating the destination image.
-func (s *Sketch) Draw() {
-	for i := 0; i <= s.Iterations; i++ {
+func (s *Sketch) Draw() image.Image {
+	for i := 0; i < s.Iterations; i++ {
 		rx := rand.Float64() * s.width
 		ry := rand.Float64() * s.height
 		r, g, b := colorToRGB(s.src.At(int(rx), int(ry)))
@@ -77,8 +92,8 @@ func (s *Sketch) Draw() {
 		sides := rand.Intn((s.PolygonSidesMax - s.PolygonSidesMin) + 1)
 		sides += s.PolygonSidesMin
 
-		x := rx * float64(s.Width) / s.width
-		y := ry * float64(s.Height) / s.height
+		x := rx * s.NewWidth / s.width
+		y := ry * s.NewHeight / s.height
 		if max := s.shake; max > 0 {
 			x += float64(rand.Intn(2*max) - max)
 			y += float64(rand.Intn(2*max) - max)
@@ -97,11 +112,22 @@ func (s *Sketch) Draw() {
 		}
 		s.dc.Stroke()
 	}
+	return s.dc.Image()
 }
 
 // Image returns the destination image.
 func (s *Sketch) Image() image.Image {
 	return s.dc.Image()
+}
+
+// Encode writes img to out in either JPEG or PNG format. Defaults to JPEG.
+func Encode(out io.Writer, img image.Image, enc string) {
+	switch enc {
+	case "png":
+		png.Encode(out, img)
+	default:
+		jpeg.Encode(out, img, nil)
+	}
 }
 
 func randomChance(odds float64) bool {
