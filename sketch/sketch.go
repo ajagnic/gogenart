@@ -25,6 +25,7 @@ type Params struct {
 	NewWidth           float64
 	NewHeight          float64
 	Greyscale          bool
+	InvertScaling      bool
 }
 
 // Sketch draws onto a destination image from a source image.
@@ -87,7 +88,16 @@ func (s *Sketch) Draw() image.Image {
 		r, g, b := colorToRGB(s.src.At(int(rx), int(ry)))
 
 		l := luminance(r, g, b)
-		stroke := s.stroke * l
+
+		stroke := s.stroke
+		if s.InvertScaling {
+			stroke = 0
+			if invL := math.Round(l * 100); invL != 0 {
+				stroke = s.stroke / invL
+			}
+		} else {
+			stroke *= l
+		}
 
 		sides := rand.Intn((s.PolygonSidesMax - s.PolygonSidesMin) + 1)
 		sides += s.PolygonSidesMin
