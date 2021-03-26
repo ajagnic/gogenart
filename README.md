@@ -8,7 +8,7 @@
 
 My take on the work presented in [preslavrachev/generative-art-in-go](https://github.com/preslavrachev/generative-art-in-go).
 This project differs from Preslav's by a couple of things:
-- *gogenart* is firstly structured as a command line tool, although the sketch package can be imported
+- *gogenart* is firstly structured as a command line tool, although the _sketch_ package can be imported
 - The drawing algorithm implements pixel luminance as a scaling factor. This essentially uses the origin image as a 'heatmap' of sorts, in which larger polygons will be drawn where pixels are brighter
 
 ## Libraries
@@ -27,6 +27,8 @@ Usage of ./gogenart:
         desired height of image
   -i int
         number of iterations (default 10000)
+  -invert
+        invert luminance scaling
   -max uint
         maximum number of polygon sides (default 5)
   -min uint
@@ -41,7 +43,6 @@ Usage of ./gogenart:
         desired width of image
 ```
 
-The command can receive input and output in various ways.
 ```bash
 # All of the following are equivalent:
 $ cat example.jpeg | gogenart > result.jpeg
@@ -55,7 +56,7 @@ $ gogenart -o=result.jpeg example.jpeg
 # Both JPEG and PNG files can be used.
 $ gogenart example.png > result.png
 
-# Extensions can be converted if using the -o flag.
+# Format can be converted if using the -o flag.
 $ gogenart -o=result.png example.jpeg
 ```
 
@@ -102,6 +103,33 @@ With low iteration and large polygons, a lot of shake, and completely random col
 $ ./gogenart -i=2000 -s=0.2 -min=2 -max=3 -shake=0.2 -fill=50 -color=100 \
 -o=examples/rose.jpeg \
 examples/rose-original.jpg
+```
+
+## Using the sketch package
+```go
+f, _ := os.Open("example.jpeg")
+
+img, enc := sketch.Source(f)
+
+config := sketch.Params{
+      Iterations:         10000,
+      PolygonSidesMin:    3,
+      PolygonSidesMax:    5,
+      PolygonFillChance:  1.0,
+      PolygonColorChance: 0.0,
+      PolygonSizeRatio:   0.1,
+      PixelShake:         0.0,
+      NewWidth:           0.0,
+      NewHeight:          0.0,
+      Greyscale:          false,
+      InvertScaling:      false,
+}
+
+genart := sketch.NewSketch(img, config).Draw()
+
+out, _ := os.Create("result.jpeg")
+
+sketch.Encode(out, genart, enc)
 ```
 
 # Authors
