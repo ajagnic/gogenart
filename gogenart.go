@@ -11,14 +11,15 @@ import (
 
 func main() {
 	i := flag.Int("i", 10000, "number of iterations")
-	w := flag.Uint("width", 0, "desired width of image")
-	h := flag.Uint("height", 0, "desired height of image")
 	min := flag.Uint("min", 3, "minimum number of polygon sides")
 	max := flag.Uint("max", 5, "maximum number of polygon sides")
 	fill := flag.Uint("fill", 100, "percent chance to fill polygon")
 	color := flag.Uint("color", 0, "percent chance to randomize polygon color")
 	s := flag.Float64("s", 0.1, "polygon size (percentage of width)")
 	shake := flag.Float64("shake", 0.0, "amount to randomize pixel positions")
+	spin := flag.Float64("spin", 0.0, "")
+	w := flag.Uint("width", 0, "desired width of image")
+	h := flag.Uint("height", 0, "desired height of image")
 	grey := flag.Bool("grey", false, "convert to greyscale")
 	invert := flag.Bool("invert", false, "invert luminance scaling")
 	output := flag.String("o", "", "file to use as output")
@@ -40,6 +41,7 @@ func main() {
 		PolygonColorChance: float64(*color) / 100.0,
 		PolygonSizeRatio:   *s,
 		PixelShake:         *shake,
+		PixelSpin:          *spin,
 		NewWidth:           float64(*w),
 		NewHeight:          float64(*h),
 		Greyscale:          *grey,
