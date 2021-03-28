@@ -22,7 +22,7 @@ type Params struct {
 	PolygonColorChance float64
 	PolygonSizeRatio   float64
 	PixelShake         float64
-	PixelSpin          float64
+	PixelSpin          int
 	NewWidth           float64
 	NewHeight          float64
 	Greyscale          bool
@@ -32,14 +32,14 @@ type Params struct {
 // Sketch draws onto a destination image from a source image.
 type Sketch struct {
 	Params
-	dc     *gg.Context
-	src    image.Image
-	width  float64
-	height float64
-	cx     float64
-	cy     float64
-	stroke float64
-	shake  int
+	dc      *gg.Context
+	src     image.Image
+	width   float64
+	height  float64
+	centerX float64
+	centerY float64
+	stroke  float64
+	shake   int
 }
 
 // Source decodes a JPEG or PNG image from an input source.
@@ -73,15 +73,15 @@ func NewSketch(source image.Image, config Params) *Sketch {
 	canvas.FillPreserve()
 
 	return &Sketch{
-		Params: config,
-		dc:     canvas,
-		src:    source,
-		width:  x,
-		height: y,
-		cx:     w / 2,
-		cy:     h / 2,
-		stroke: config.PolygonSizeRatio * w,
-		shake:  int(config.PixelShake * w),
+		Params:  config,
+		dc:      canvas,
+		src:     source,
+		width:   x,
+		height:  y,
+		centerX: w / 2,
+		centerY: h / 2,
+		stroke:  config.PolygonSizeRatio * w,
+		shake:   int(config.PixelShake * w),
 	}
 }
 
@@ -114,9 +114,8 @@ func (s *Sketch) Draw() image.Image {
 			y += float64(rand.Intn(2*max) - max)
 		}
 
-		x1, y1 := x, y
-		if s.PixelSpin > 0 && l > 0.1 {
-			x1, y1 = rotateAround(x, y, s.cx, s.cy, s.PixelSpin)
+		if s.PixelSpin > 0 {
+			x, y = rotateAround(x, y, s.centerX, s.centerY, s.PixelSpin)
 		}
 
 		if s.Greyscale {
@@ -126,7 +125,7 @@ func (s *Sketch) Draw() image.Image {
 			r, g, b = rand.Intn(256), rand.Intn(256), rand.Intn(256)
 		}
 		s.dc.SetRGBA255(r, g, b, rand.Intn(256))
-		s.dc.DrawRegularPolygon(sides, x1, y1, stroke, rand.Float64())
+		s.dc.DrawRegularPolygon(sides, x, y, stroke, rand.Float64())
 		if randomChance(s.PolygonFillChance) {
 			s.dc.FillPreserve()
 		}
@@ -150,11 +149,12 @@ func Encode(out io.Writer, img image.Image, enc string) {
 	}
 }
 
-func rotateAround(x, y, cx, cy, angle float64) (x1 float64, y1 float64) {
-	theta := angle * (math.Pi / 180)
-	x1 = math.Cos(theta)*(x-cx) - math.Sin(theta)*(y-cy) + cx
-	y1 = math.Sin(theta)*(x-cx) + math.Cos(theta)*(y-cy) + cy
-	return
+func rotateAround(x, y, cx, cy float64, angle int) (float64, float64) {
+	rangle := rand.Intn(angle)
+	theta := float64(rangle) * (math.Pi / 180)
+	x1 := math.Cos(theta)*(x-cx) - math.Sin(theta)*(y-cy) + cx
+	y1 := math.Sin(theta)*(x-cx) + math.Cos(theta)*(y-cy) + cy
+	return x1, y1
 }
 
 func randomChance(odds float64) bool {

@@ -17,7 +17,7 @@ func main() {
 	color := flag.Uint("color", 0, "percent chance to randomize polygon color")
 	s := flag.Float64("s", 0.1, "polygon size (percentage of width)")
 	shake := flag.Float64("shake", 0.0, "amount to randomize pixel positions")
-	spin := flag.Float64("spin", 0.0, "")
+	spin := flag.Uint("spin", 0, "max degrees to rotate pixel positions")
 	w := flag.Uint("width", 0, "desired width of image")
 	h := flag.Uint("height", 0, "desired height of image")
 	grey := flag.Bool("grey", false, "convert to greyscale")
@@ -41,7 +41,7 @@ func main() {
 		PolygonColorChance: float64(*color) / 100.0,
 		PolygonSizeRatio:   *s,
 		PixelShake:         *shake,
-		PixelSpin:          *spin,
+		PixelSpin:          int(*spin),
 		NewWidth:           float64(*w),
 		NewHeight:          float64(*h),
 		Greyscale:          *grey,
