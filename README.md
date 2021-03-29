@@ -10,6 +10,10 @@ My take on the work presented in [preslavrachev/generative-art-in-go](https://gi
 This project differs from Preslav's by a couple of things:
 - *gogenart* is firstly structured as a command line tool, although the _sketch_ package can be imported
 - The drawing algorithm implements pixel luminance as a scaling factor. This essentially uses the origin image as a 'heatmap' of sorts, in which larger polygons will be drawn where pixels are brighter
+- Additonal features:
+  - random color and fill
+  - random pixel rotation
+  - greyscale, using luminance
 
 ## Libraries
 - [fogleman/gg](https://github.com/fogleman/gg)
@@ -39,6 +43,8 @@ Usage of ./gogenart:
         polygon size (percentage of width) (default 0.1)
   -shake float
         amount to randomize pixel positions
+  -spin uint
+        max degrees to rotate pixel positions
   -width uint
         desired width of image
 ```
@@ -109,7 +115,7 @@ examples/rose-original.jpg
 ```go
 f, _ := os.Open("example.jpeg")
 
-img, enc := sketch.Source(f)
+img, enc := sketch.Source(f) // decode image from io.Reader
 
 config := sketch.Params{
       Iterations:         10000,
@@ -119,6 +125,7 @@ config := sketch.Params{
       PolygonColorChance: 0.0,
       PolygonSizeRatio:   0.1,
       PixelShake:         0.0,
+      PixelSpin:          0,
       NewWidth:           0.0,
       NewHeight:          0.0,
       Greyscale:          false,
@@ -129,7 +136,7 @@ genart := sketch.NewSketch(img, config).Draw()
 
 out, _ := os.Create("result.jpeg")
 
-sketch.Encode(out, genart, enc)
+sketch.Encode(out, genart, enc) // encode and write to io.Writer
 ```
 
 # Authors
