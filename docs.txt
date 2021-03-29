@@ -14,23 +14,24 @@ func Source(in io.Reader) (img image.Image, enc string)
 TYPES
 
 type Params struct {
-	Iterations         int
-	PolygonSidesMin    int
-	PolygonSidesMax    int
-	PolygonFillChance  float64
-	PolygonColorChance float64
-	PolygonSizeRatio   float64
-	PixelShake         float64
-	PixelSpin          int
-	NewWidth           float64
-	NewHeight          float64
-	Greyscale          bool
-	InvertScaling      bool
+	Iterations       int
+	PolygonSidesMin  int
+	PolygonSidesMax  int
+	PolygonFill      float64 // effective range: 0.0-1.0
+	PolygonColor     float64 // effective range: 0.0-1.0
+	PolygonSizeRatio float64 // percentage of width
+	PixelShake       float64 // percentage of width
+	PixelSpin        int     // degrees of rotation
+	NewWidth         float64
+	NewHeight        float64
+	Greyscale        bool
+	InvertScaling    bool
 }
     Params represents the configuration of a sketch.
 
 type Sketch struct {
 	Params
+	Source  image.Image
 	CenterX float64
 	CenterY float64
 	Stroke  float64
@@ -47,6 +48,9 @@ func NewSketch(source image.Image, config Params) *Sketch
 func (s *Sketch) Draw() image.Image
     Draw iterates over the source image, creating the destination image.
 
+func (s *Sketch) DrawAt(x, y, stroke, rotation float64, n, r, g, b, a int)
+    DrawAt draws a n-sided polygon at (x,y), colored with RGBA values.
+
 func (s *Sketch) DrawOnce()
     DrawOnce picks a random pixel, and draws a polygon at that pixels position.
     The polygons size is determinant on the pixels luminance. Polygon shape,
@@ -54,4 +58,7 @@ func (s *Sketch) DrawOnce()
 
 func (s *Sketch) Image() image.Image
     Image returns the destination image.
+
+func (s *Sketch) Pixel() (x, y float64)
+    Pixel returns a random point from the source images coordinate space.
 

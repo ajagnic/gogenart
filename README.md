@@ -135,5 +135,40 @@ out, _ := os.Create("result.jpeg")
 sketch.Encode(out, genart, enc) // encode and write to io.Writer
 ```
 
+To programmatically change parameters, you can iteratively call *DrawOnce()*
+```go
+...
+canvas := sketch.NewSketch(img, sketch.Params{
+      PolygonSidesMin: 3,
+      PolygonSizeRatio: 0.1,
+})
+
+for i := 0; i < 10000; i++ {
+      if i > 5000 {
+            canvas.Source = img2
+      }
+      canvas.Stroke -= 0.01
+      canvas.DrawOnce()
+}
+
+genart := canvas.Image()
+sketch.Encode(out, genart, "png")
+```
+
+You can implement your own drawing algorithm by using *DrawAt()*
+```go
+...
+stroke := 100.0
+rotate := 50.0
+sides := 4
+r, g, b, a := 255, 255, 255, 255
+
+for i := 0; i < 100; i++ {
+      x, y := canvas.Pixel()
+      canvas.DrawAt(x, y, stroke, rotate, sides, r, g, b, a)
+}
+...
+```
+
 # Authors
 Adrian Agnic [ [Github](https://github.com/ajagnic) ]

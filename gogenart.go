@@ -25,27 +25,23 @@ func main() {
 	output := flag.String("o", "", "file to use as output")
 	flag.Parse()
 
-	if *max < *min {
-		min, max = max, min
-	}
-
 	in := handleInput()
 	defer in.Close()
 
 	img, enc := sketch.Source(in)
 	newImg := sketch.NewSketch(img, sketch.Params{
-		Iterations:         *i,
-		PolygonSidesMin:    int(*min),
-		PolygonSidesMax:    int(*max),
-		PolygonFillChance:  float64(*fill) / 100.0,
-		PolygonColorChance: float64(*color) / 100.0,
-		PolygonSizeRatio:   *s,
-		PixelShake:         *shake,
-		PixelSpin:          int(*spin),
-		NewWidth:           float64(*w),
-		NewHeight:          float64(*h),
-		Greyscale:          *grey,
-		InvertScaling:      *invert,
+		Iterations:       *i,
+		PolygonSidesMin:  int(*min),
+		PolygonSidesMax:  int(*max),
+		PolygonFill:      float64(*fill) / 100.0,
+		PolygonColor:     float64(*color) / 100.0,
+		PolygonSizeRatio: *s,
+		PixelShake:       *shake,
+		PixelSpin:        int(*spin),
+		NewWidth:         float64(*w),
+		NewHeight:        float64(*h),
+		Greyscale:        *grey,
+		InvertScaling:    *invert,
 	}).Draw()
 
 	out, enc := handleOutput(*output, enc)
