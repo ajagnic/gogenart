@@ -1,0 +1,57 @@
+package sketch // import "github.com/ajagnic/gogenart/sketch"
+
+
+FUNCTIONS
+
+func Encode(out io.Writer, img image.Image, enc string)
+    Encode writes img to out in either JPEG or PNG format. Defaults to JPEG.
+
+func Source(in io.Reader) (img image.Image, enc string)
+    Source decodes a JPEG or PNG image from an input source. If input can't be
+    decoded, returns a 100x100 blank image.
+
+
+TYPES
+
+type Params struct {
+	Iterations         int
+	PolygonSidesMin    int
+	PolygonSidesMax    int
+	PolygonFillChance  float64
+	PolygonColorChance float64
+	PolygonSizeRatio   float64
+	PixelShake         float64
+	PixelSpin          int
+	NewWidth           float64
+	NewHeight          float64
+	Greyscale          bool
+	InvertScaling      bool
+}
+    Params represents the configuration of a sketch.
+
+type Sketch struct {
+	Params
+	CenterX float64
+	CenterY float64
+	Stroke  float64
+	Shake   int
+
+	// Has unexported fields.
+}
+    Sketch draws onto a destination image from a source image.
+
+func NewSketch(source image.Image, config Params) *Sketch
+    NewSketch returns a blank Sketch based on the source image. Seeds the
+    math/rand pkg.
+
+func (s *Sketch) Draw() image.Image
+    Draw iterates over the source image, creating the destination image.
+
+func (s *Sketch) DrawOnce()
+    DrawOnce picks a random pixel, and draws a polygon at that pixels position.
+    The polygons size is determinant on the pixels luminance. Polygon shape,
+    size, color and position can be modified by the Params struct.
+
+func (s *Sketch) Image() image.Image
+    Image returns the destination image.
+

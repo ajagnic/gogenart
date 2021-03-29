@@ -32,14 +32,14 @@ type Params struct {
 // Sketch draws onto a destination image from a source image.
 type Sketch struct {
 	Params
+	CenterX float64
+	CenterY float64
+	Stroke  float64
+	Shake   int
 	dc      *gg.Context
 	src     image.Image
 	width   float64
 	height  float64
-	centerX float64
-	centerY float64
-	stroke  float64
-	shake   int
 }
 
 // Source decodes a JPEG or PNG image from an input source.
@@ -74,64 +74,71 @@ func NewSketch(source image.Image, config Params) *Sketch {
 
 	return &Sketch{
 		Params:  config,
+		CenterX: w / 2,
+		CenterY: h / 2,
+		Stroke:  config.PolygonSizeRatio * w,
+		Shake:   int(config.PixelShake * w),
 		dc:      canvas,
 		src:     source,
 		width:   x,
 		height:  y,
-		centerX: w / 2,
-		centerY: h / 2,
-		stroke:  config.PolygonSizeRatio * w,
-		shake:   int(config.PixelShake * w),
 	}
 }
 
 // Draw iterates over the source image, creating the destination image.
 func (s *Sketch) Draw() image.Image {
 	for i := 0; i < s.Iterations; i++ {
-		rx := rand.Float64() * s.width
-		ry := rand.Float64() * s.height
-		r, g, b := colorToRGB(s.src.At(int(rx), int(ry)))
-
-		l := luminance(r, g, b)
-
-		stroke := s.stroke
-		if s.InvertScaling {
-			stroke = 0
-			if invL := math.Round(l * 100); invL != 0 {
-				stroke = s.stroke / invL
-			}
-		} else {
-			stroke *= l
-		}
-
-		sides := rand.Intn((s.PolygonSidesMax - s.PolygonSidesMin) + 1)
-		sides += s.PolygonSidesMin
-
-		x := rx * s.NewWidth / s.width
-		y := ry * s.NewHeight / s.height
-		if max := s.shake; max > 0 {
-			x += float64(rand.Intn(2*max) - max)
-			y += float64(rand.Intn(2*max) - max)
-		}
-
-		if s.PixelSpin > 0 {
-			x, y = rotateAround(x, y, s.centerX, s.centerY, s.PixelSpin)
-		}
-
-		if s.Greyscale {
-			grey := int(l * 255)
-			r, g, b = grey, grey, grey
-		} else if l > 0.1 && randomChance(s.PolygonColorChance) {
-			r, g, b = rand.Intn(256), rand.Intn(256), rand.Intn(256)
-		}
-		s.dc.SetRGBA255(r, g, b, rand.Intn(256))
-		s.dc.DrawRegularPolygon(sides, x, y, stroke, rand.Float64())
-		if randomChance(s.PolygonFillChance) {
-			s.dc.FillPreserve()
-		}
-		s.dc.Stroke()
+		s.DrawOnce()
 	}
 	return s.dc.Image()
+}
+
+// DrawOnce picks a random pixel, and draws a polygon at that pixels position.
+// The polygons size is determinant on the pixels luminance.
+// Polygon shape, size, color and position can be modified by the Params struct.
+func (s *Sketch) DrawOnce() {
+	rx := rand.Float64() * s.width
+	ry := rand.Float64() * s.height
+	r, g, b := colorToRGB(s.src.At(int(rx), int(ry)))
+
+	l := luminance(r, g, b)
+
+	stroke := s.Stroke
+	if s.InvertScaling {
+		stroke = 0
+		if invL := math.Round(l * 100); invL != 0 {
+			stroke = s.Stroke / invL
+		}
+	} else {
+		stroke *= l
+	}
+
+	sides := rand.Intn((s.PolygonSidesMax - s.PolygonSidesMin) + 1)
+	sides += s.PolygonSidesMin
+
+	x := rx * s.NewWidth / s.width
+	y := ry * s.NewHeight / s.height
+	if max := s.Shake; max > 0 {
+		x += float64(rand.Intn(2*max) - max)
+		y += float64(rand.Intn(2*max) - max)
+	}
+
+	if s.PixelSpin > 0 {
+		x, y = rotateAround(x, y, s.CenterX, s.CenterY, s.PixelSpin)
+	}
+
+	if s.Greyscale {
+		grey := int(l * 255)
+		r, g, b = grey, grey, grey
+	} else if l > 0.1 && randomChance(s.PolygonColorChance) {
+		r, g, b = rand.Intn(256), rand.Intn(256), rand.Intn(256)
+	}
+	s.dc.SetRGBA255(r, g, b, rand.Intn(256))
+	s.dc.DrawRegularPolygon(sides, x, y, stroke, rand.Float64())
+	if randomChance(s.PolygonFillChance) {
+		s.dc.FillPreserve()
+	}
+	s.dc.Stroke()
 }
 
 // Image returns the destination image.
