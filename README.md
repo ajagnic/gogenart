@@ -10,10 +10,6 @@ My take on the work presented in [preslavrachev/generative-art-in-go](https://gi
 This project differs from Preslav's by a couple of things:
 - *gogenart* is firstly structured as a command line tool, although the _sketch_ package can be imported
 - The drawing algorithm implements pixel luminance as a scaling factor. This essentially uses the origin image as a 'heatmap' of sorts, in which larger polygons will be drawn where pixels are brighter
-- Additonal features:
-  - random color and fill
-  - random pixel rotation
-  - greyscale, using luminance
 
 ## Libraries
 - [fogleman/gg](https://github.com/fogleman/gg)
