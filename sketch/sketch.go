@@ -11,33 +11,35 @@ import (
 	"time"
 
 	"github.com/fogleman/gg"
+
+	"github.com/ajagnic/gogenart/funcs"
 )
 
 // Params represents the configuration of a sketch.
 type Params struct {
-	Iterations         int
-	PolygonSidesMin    int
-	PolygonSidesMax    int
-	PolygonFillChance  float64
-	PolygonColorChance float64
-	PolygonSizeRatio   float64
-	PixelShake         float64
-	PixelSpin          int
-	NewWidth           float64
-	NewHeight          float64
-	Greyscale          bool
-	InvertScaling      bool
+	Iterations       int
+	PolygonSidesMin  int
+	PolygonSidesMax  int
+	PolygonFill      float64 // effective range: 0.0-1.0
+	PolygonColor     float64 // effective range: 0.0-1.0
+	PolygonSizeRatio float64 // percentage of width
+	PixelShake       float64 // percentage of width
+	PixelSpin        int     // degrees of rotation
+	NewWidth         float64
+	NewHeight        float64
+	Greyscale        bool
+	InvertScaling    bool
 }
 
 // Sketch draws onto a destination image from a source image.
 type Sketch struct {
 	Params
+	Source  image.Image
 	CenterX float64
 	CenterY float64
 	Stroke  float64
 	Shake   int
 	dc      *gg.Context
-	src     image.Image
 	width   float64
 	height  float64
 }
@@ -52,10 +54,24 @@ func Source(in io.Reader) (img image.Image, enc string) {
 	return
 }
 
+// Encode writes img to out in either JPEG or PNG format. Defaults to JPEG.
+func Encode(out io.Writer, img image.Image, enc string) {
+	switch enc {
+	case "png":
+		png.Encode(out, img)
+	default:
+		jpeg.Encode(out, img, nil)
+	}
+}
+
 // NewSketch returns a blank Sketch based on the source image.
 // Seeds the math/rand pkg.
 func NewSketch(source image.Image, config Params) *Sketch {
 	rand.Seed(time.Now().Unix())
+
+	if min, max := config.PolygonSidesMin, config.PolygonSidesMax; min > max {
+		config.PolygonSidesMin, config.PolygonSidesMax = max, min
+	}
 
 	max := source.Bounds().Max
 	x, y := float64(max.X), float64(max.Y)
@@ -74,12 +90,12 @@ func NewSketch(source image.Image, config Params) *Sketch {
 
 	return &Sketch{
 		Params:  config,
+		Source:  source,
 		CenterX: w / 2,
 		CenterY: h / 2,
 		Stroke:  config.PolygonSizeRatio * w,
 		Shake:   int(config.PixelShake * w),
 		dc:      canvas,
-		src:     source,
 		width:   x,
 		height:  y,
 	}
@@ -90,18 +106,17 @@ func (s *Sketch) Draw() image.Image {
 	for i := 0; i < s.Iterations; i++ {
 		s.DrawOnce()
 	}
-	return s.dc.Image()
+	return s.Image()
 }
 
 // DrawOnce picks a random pixel, and draws a polygon at that pixels position.
 // The polygons size is determinant on the pixels luminance.
 // Polygon shape, size, color and position can be modified by the Params struct.
 func (s *Sketch) DrawOnce() {
-	rx := rand.Float64() * s.width
-	ry := rand.Float64() * s.height
-	r, g, b := colorToRGB(s.src.At(int(rx), int(ry)))
+	rx, ry := s.Pixel()
+	r, g, b := funcs.ColorToRGB(s.Source.At(int(rx), int(ry)))
 
-	l := luminance(r, g, b)
+	l := funcs.Luminance(r, g, b)
 
 	stroke := s.Stroke
 	if s.InvertScaling {
@@ -124,69 +139,37 @@ func (s *Sketch) DrawOnce() {
 	}
 
 	if s.PixelSpin > 0 {
-		x, y = rotateAround(x, y, s.CenterX, s.CenterY, s.PixelSpin)
+		x, y = funcs.RotateAround(x, y, s.CenterX, s.CenterY, s.PixelSpin)
 	}
 
 	if s.Greyscale {
 		grey := int(l * 255)
 		r, g, b = grey, grey, grey
-	} else if l > 0.1 && randomChance(s.PolygonColorChance) {
+	} else if l > 0.1 && funcs.RandomChance(s.PolygonColor) {
 		r, g, b = rand.Intn(256), rand.Intn(256), rand.Intn(256)
 	}
-	s.dc.SetRGBA255(r, g, b, rand.Intn(256))
-	s.dc.DrawRegularPolygon(sides, x, y, stroke, rand.Float64())
-	if randomChance(s.PolygonFillChance) {
+
+	s.DrawAt(x, y, stroke, rand.Float64(), sides, r, g, b, rand.Intn(256))
+}
+
+// DrawAt draws a n-sided polygon at (x,y), colored with RGBA values.
+func (s *Sketch) DrawAt(x, y, stroke, rotation float64, n, r, g, b, a int) {
+	s.dc.SetRGBA255(r, g, b, a)
+	s.dc.DrawRegularPolygon(n, x, y, stroke, rotation)
+	if funcs.RandomChance(s.PolygonFill) {
 		s.dc.FillPreserve()
 	}
 	s.dc.Stroke()
 }
 
-// Image returns the destination image.
-func (s *Sketch) Image() image.Image {
-	return s.dc.Image()
-}
-
-// Encode writes img to out in either JPEG or PNG format. Defaults to JPEG.
-func Encode(out io.Writer, img image.Image, enc string) {
-	switch enc {
-	case "png":
-		png.Encode(out, img)
-	default:
-		jpeg.Encode(out, img, nil)
-	}
-}
-
-func rotateAround(x, y, cx, cy float64, angle int) (float64, float64) {
-	rangle := rand.Intn(angle)
-	theta := float64(rangle) * (math.Pi / 180)
-	x1 := math.Cos(theta)*(x-cx) - math.Sin(theta)*(y-cy) + cx
-	y1 := math.Sin(theta)*(x-cx) + math.Cos(theta)*(y-cy) + cy
-	return x1, y1
-}
-
-func randomChance(odds float64) bool {
-	if r := rand.Intn(100) + 1; r < int(odds*100) {
-		return true
-	}
-	return false
-}
-
-func colorToRGB(c color.Color) (r, g, b int) {
-	rr, gg, bb, _ := c.RGBA()
-	r, g, b = int(rr/255), int(gg/255), int(bb/255)
+// Pixel returns a random point from the source images coordinate space.
+func (s *Sketch) Pixel() (x, y float64) {
+	x = rand.Float64() * s.width
+	y = rand.Float64() * s.height
 	return
 }
 
-func luminance(r, g, b int) float64 {
-	values := [3]float64{float64(r), float64(g), float64(b)}
-	for i, c := range values {
-		c = c / 255
-		if c <= 0.03928 {
-			c = c / 12.92
-		} else {
-			c = math.Pow((c+0.055)/1.055, 2.4)
-		}
-		values[i] = c
-	}
-	return 0.2126*values[0] + 0.7152*values[1] + 0.0722*values[2]
+// Image returns the destination image.
+func (s *Sketch) Image() image.Image {
+	return s.dc.Image()
 }
